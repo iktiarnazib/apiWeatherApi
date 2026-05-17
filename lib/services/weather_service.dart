@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:apiweather/models/weather_model.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart';
 import 'package:http/http.dart' as http;
 
 class WeatherService {
