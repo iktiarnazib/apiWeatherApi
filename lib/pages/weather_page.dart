@@ -51,9 +51,7 @@ class _WeatherPageState extends State<WeatherPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('City: ${_weather?.cityName ?? 'Loading City'}'),
-                  Text(
-                    'Temperature: ${_weather?.temperature ?? 'Loading temperature'}',
-                  ),
+                  Text('Temperature: ${_weather?.temperature}°C'),
                 ],
               ),
             ),
