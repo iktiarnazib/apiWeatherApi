@@ -13,30 +13,13 @@ class WeatherPage extends StatefulWidget {
 class _WeatherPageState extends State<WeatherPage> {
   //api key:
   final weatherService = WeatherService("2e5484ab45791c3473ed55b6a398ff58");
-  Weather? _weather;
+
   String errorMessage = '';
   //fetch weather
-  Future<void> fetchWeather() async {
+  Future<Weather> fetchWeather() async {
     //get current city
     String cityName = await weatherService.getCurrentCity();
-
-    //get weather for city
-    try {
-      final Weather weather = await weatherService.getWeather(cityName);
-      setState(() {
-        _weather = weather;
-      });
-    } catch (e) {
-      setState(() {
-        errorMessage = e.toString();
-      });
-    }
-  }
-
-  @override
-  void initState() {
-    fetchWeather();
-    super.initState();
+    return await weatherService.getWeather(cityName);
   }
 
   String getWeatherLottie(String weatherCondition) {
@@ -67,40 +50,68 @@ class _WeatherPageState extends State<WeatherPage> {
       appBar: AppBar(
         title: Text('Weather', style: TextStyle(fontFamily: 'DMSerifText')),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  //get city
-                  Text(
-                    'City: ${_weather?.cityName ?? 'Loading City'}',
-                    softWrap: true,
-                    style: TextStyle(fontFamily: 'DMSerifText', fontSize: 20),
-                  ),
-                  //lottie according to weather condition
-                  Lottie.asset(
-                    getWeatherLottie(
-                      _weather?.weatherCondition ?? 'assets/lotties/sunny.json',
+      body: FutureBuilder(
+        future: fetchWeather(),
+
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          //if has error
+          if (snapshot.hasError) {
+            return Center(child: Text(snapshot.error.toString()));
+          }
+
+          //if data loading
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: const CircularProgressIndicator());
+          }
+
+          //if data null
+          if (!snapshot.hasData) {
+            return Center(
+              child: const Text('An error occured, please try again'),
+            );
+          }
+
+          final weatherData = snapshot.data!;
+
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height,
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${weatherData.cityName ?? 'null'}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontFamily: 'DMSerifText', fontSize: 24),
                     ),
-                  ),
-                  //get temperature
-                  Text(
-                    'Temperature: ${_weather?.temperature.round()}°C',
-                    style: TextStyle(fontFamily: 'DMSerifText', fontSize: 18),
-                  ),
-                  //get weatherCondition
-                  Text(
-                    _weather?.weatherCondition ?? '',
-                    style: TextStyle(fontFamily: 'DMSerifText'),
-                  ),
-                ],
+                    Lottie.asset(
+                      height: 200,
+                      getWeatherLottie(
+                        '${weatherData.weatherCondition ?? 'null'}',
+                      ),
+                    ),
+                    Text(
+                      '${weatherData.temperature.round()}°C',
+                      style: TextStyle(fontFamily: 'DMSerifText', fontSize: 22),
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      '${weatherData.weatherCondition ?? 'null'}',
+                      style: TextStyle(fontFamily: 'DMSerifText', fontSize: 15),
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
